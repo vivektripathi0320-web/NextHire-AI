@@ -51,22 +51,36 @@ NextHire-AI/
 ## 📈 Development Roadmap
 
 *   [x] **Phase 1**: Project Initialization
-*   [ ] **Phase 2**: Frontend Foundation
-*   [ ] **Phase 3**: Backend Foundation
-*   [ ] **Phase 4**: Resume Generator
-*   [ ] **Phase 5**: Resume Enhancer
-*   [ ] **Phase 6**: ATS Analyzer
-*   [ ] **Phase 7**: Portfolio Builder
-*   [ ] **Phase 8**: JD Matcher
-*   [ ] **Phase 9**: UI Polish
-*   [ ] **Phase 10**: Deployment
-*   [ ] **Phase 11**: Documentation
+*   [x] **Phase 2**: Frontend Foundation
+*   [x] **Phase 3**: Backend Foundation
+*   [x] **Phase 4**: Resume Generator
+*   [x] **Phase 5**: Resume Enhancer
+*   [x] **Phase 6**: ATS Analyzer
+*   [x] **Phase 7**: Portfolio Builder
+*   [x] **Phase 8**: JD Matcher
+*   [x] **Phase 9**: UI Polish
+*   [x] **Phase 10**: Deployment Configurations
+*   [ ] **Phase 11**: Technical Documentation
 *   [ ] **Phase 12**: Final QA
 
 ---
 
-## 🛠️ Local Development Setup
+## 🚀 Deployment Guide
 
-Detailed setup guides for each component can be found in their respective folders:
-*   [Frontend Setup](./frontend/README.md) *(Coming soon in Phase 2)*
-*   [Backend Setup](./backend/README.md) *(Coming soon in Phase 3)*
+This project is configured for single-click deployment using **Vercel** (for the frontend) and **Render** (for the backend).
+
+### Frontend Deployment (Vercel)
+1. Import the repository in Vercel.
+2. Set the **Root Directory** to `frontend`.
+3. Set the build commands automatically (Framework preset: `Vite`).
+4. Set the **Environment Variable**:
+   *   `VITE_API_URL`: The live URL of your Render backend (e.g., `https://nexthire-backend.onrender.com`).
+5. Vercel will build and route client requests correctly using the configuration in [vercel.json](./frontend/vercel.json).
+
+### Backend Deployment (Render)
+1. Import the repository in Render using the Blueprint feature, or create a Web Service.
+2. Render will automatically parse the configuration in [render.yaml](./render.yaml).
+3. Set the **Environment Variable**:
+   *   `GEMINI_API_KEY`: Paste your private Google Gemini API key.
+4. Render mounts a 1GB persistent disk under `/data` to store the SQLite `nexthire.db` database file, preventing data loss on build restarts.
+
