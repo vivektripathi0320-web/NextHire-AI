@@ -53,6 +53,7 @@ class PortfolioResponse(PortfolioBase):
     id: int
     slug: str
     created_at: datetime
+    resume: Optional[ResumeResponse] = None
 
     class Config:
         orm_mode = True

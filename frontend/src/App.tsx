@@ -5,6 +5,7 @@ import ResumeGenerator from './pages/ResumeGenerator';
 import ResumeEnhancer from './pages/ResumeEnhancer';
 import AtsAnalyzer from './pages/AtsAnalyzer';
 import PortfolioBuilder from './pages/PortfolioBuilder';
+import PublicPortfolio from './pages/PublicPortfolio';
 import JdMatcher from './pages/JdMatcher';
 import About from './pages/About';
 import Contact from './pages/Contact';
@@ -23,6 +24,7 @@ export default function App() {
           <Route path="about" element={<About />} />
           <Route path="contact" element={<Contact />} />
         </Route>
+        <Route path="portfolio/:slug" element={<PublicPortfolio />} />
       </Routes>
     </Router>
   );
