@@ -37,6 +37,39 @@ export default function PortfolioBuilder() {
   const [createdSlug, setCreatedSlug] = useState('');
   const [copied, setCopied] = useState(false);
 
+  // Slug checking states
+  const [slugStatus, setSlugStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
+  const [slugSuggestion, setSlugSuggestion] = useState('');
+
+  // Debounced slug checker
+  useEffect(() => {
+    if (!slug.trim()) {
+      setSlugStatus('idle');
+      setSlugSuggestion('');
+      return;
+    }
+
+    const delayDebounce = setTimeout(async () => {
+      setSlugStatus('checking');
+      try {
+        const res = await fetch(`http://localhost:8000/api/portfolios/check-slug/${slug.trim()}`);
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        if (data.available) {
+          setSlugStatus('available');
+          setSlugSuggestion('');
+        } else {
+          setSlugStatus('taken');
+          setSlugSuggestion(data.suggestion);
+        }
+      } catch (err) {
+        setSlugStatus('idle');
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounce);
+  }, [slug]);
+
   useEffect(() => {
     async function fetchResumes() {
       try {
@@ -365,9 +398,32 @@ export default function PortfolioBuilder() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block">
-                  Public Url Slug
-                </label>
+                <div className="flex justify-between items-center">
+                  <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block">
+                    Public Url Slug
+                  </label>
+                  
+                  {/* Status Indicator Badges */}
+                  {slug.trim() && slugStatus === 'checking' && (
+                    <span className="text-[10px] text-zinc-500 flex items-center gap-1">
+                      <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                      Checking...
+                    </span>
+                  )}
+                  {slug.trim() && slugStatus === 'available' && (
+                    <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+                      <Check className="h-3 w-3" />
+                      ✓ Available
+                    </span>
+                  )}
+                  {slug.trim() && slugStatus === 'taken' && (
+                    <span className="text-[10px] text-rose-400 font-semibold flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" />
+                      ✗ Taken
+                    </span>
+                  )}
+                </div>
+                
                 <div className="flex rounded-xl overflow-hidden border border-white/10 bg-zinc-900/60 focus-within:border-primary transition-colors">
                   <span className="bg-zinc-800 text-zinc-500 px-3 py-3 text-xs sm:text-sm flex items-center border-r border-white/5">
                     nexthire.ai/portfolio/
@@ -381,6 +437,23 @@ export default function PortfolioBuilder() {
                     className="w-full bg-transparent px-3 py-3 text-sm text-white focus:outline-none"
                   />
                 </div>
+                
+                {/* Alternative suggestion alert card */}
+                {slugStatus === 'taken' && slugSuggestion && (
+                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 text-xs flex justify-between items-center gap-4 mt-2">
+                    <span className="text-zinc-300">
+                      Slug already exists. Suggested: <strong className="text-amber-400 font-bold">{slugSuggestion}</strong>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setSlug(slugSuggestion)}
+                      className="bg-amber-500 hover:bg-amber-600 text-zinc-950 font-bold px-3 py-1 rounded-lg text-[10px] uppercase tracking-wider transition-all"
+                    >
+                      Accept
+                    </button>
+                  </div>
+                )}
+                
                 <span className="text-[10px] text-zinc-500 block">
                   Letters, numbers, and hyphens only.
                 </span>

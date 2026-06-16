@@ -114,5 +114,46 @@ class TestEndpoints(unittest.TestCase):
         self.assertIn("detail", data)
         self.assertIn("File exceeds maximum size", data["detail"])
 
+    def test_portfolio_slug_availability_and_auto_resolution(self):
+        # 1. Create a dummy resume first
+        resume_payload = {
+            "title": "Software Engineer Resume",
+            "summary": "Experienced coder",
+            "raw_text": "Alex Mercer, React",
+            "json_content": {"contact": {"name": "Alex"}}
+        }
+        res = self.client.post("/api/resumes", json=resume_payload)
+        self.assertEqual(res.status_code, 201)
+        resume_id = res.json()["id"]
+
+        # 2. Check slug availability (should be True initially)
+        unique_slug = "test-unique-slug-foo"
+        check_res = self.client.get(f"/api/portfolios/check-slug/{unique_slug}")
+        self.assertEqual(check_res.status_code, 200)
+        self.assertEqual(check_res.json()["available"], True)
+
+        # 3. Create a portfolio with this slug
+        portfolio_payload = {
+            "resume_id": resume_id,
+            "slug": unique_slug,
+            "title": "Alex Mercer's Portfolio",
+            "theme": "classic-dark",
+            "customizations": {"linkedin": "linkedin.com/in/alex"}
+        }
+        create_res = self.client.post("/api/portfolios", json=portfolio_payload)
+        self.assertEqual(create_res.status_code, 201)
+        self.assertEqual(create_res.json()["slug"], unique_slug)
+
+        # 4. Check slug availability again (should be False now, and suggest unique_slug-1)
+        check_res2 = self.client.get(f"/api/portfolios/check-slug/{unique_slug}")
+        self.assertEqual(check_res2.status_code, 200)
+        self.assertEqual(check_res2.json()["available"], False)
+        self.assertEqual(check_res2.json()["suggestion"], f"{unique_slug}-1")
+
+        # 5. Create a second portfolio with the SAME slug (should auto-resolve to unique_slug-1 instead of failing)
+        create_res2 = self.client.post("/api/portfolios", json=portfolio_payload)
+        self.assertEqual(create_res2.status_code, 201)
+        self.assertEqual(create_res2.json()["slug"], f"{unique_slug}-1")
+
 if __name__ == "__main__":
     unittest.main()

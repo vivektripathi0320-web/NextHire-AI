@@ -385,16 +385,46 @@ def get_ats_scans(resume_id: int, db: Session = Depends(get_db)):
 
 
 # --- PORTFOLIOS API ---
+@router.get("/portfolios/check-slug/{slug}")
+def check_slug_availability(slug: str, db: Session = Depends(get_db)):
+    cleaned_slug = slug.lower().strip()
+    if not cleaned_slug:
+        return {"available": False, "suggestion": ""}
+    
+    # Check if slug is unique
+    existing = db.query(models.Portfolio).filter(models.Portfolio.slug == cleaned_slug).first()
+    if not existing:
+        return {"available": True, "suggestion": ""}
+    
+    # Generate alternative suggestion
+    counter = 1
+    while True:
+        candidate = f"{cleaned_slug}-{counter}"
+        alt_existing = db.query(models.Portfolio).filter(models.Portfolio.slug == candidate).first()
+        if not alt_existing:
+            return {"available": False, "suggestion": candidate}
+        counter += 1
+
 @router.post("/portfolios", response_model=schemas.PortfolioResponse, status_code=status.HTTP_201_CREATED)
 def create_portfolio(portfolio: schemas.PortfolioCreate, db: Session = Depends(get_db)):
-    # Check if slug is unique
-    existing = db.query(models.Portfolio).filter(models.Portfolio.slug == portfolio.slug).first()
+    requested_slug = portfolio.slug.lower().strip()
+    resolved_slug = requested_slug
+    
+    # Auto-resolve duplicate slug conflicts silently
+    existing = db.query(models.Portfolio).filter(models.Portfolio.slug == requested_slug).first()
     if existing:
-        raise HTTPException(status_code=400, detail="Slug already taken. Please choose another unique slug.")
+        counter = 1
+        while True:
+            candidate = f"{requested_slug}-{counter}"
+            alt_existing = db.query(models.Portfolio).filter(models.Portfolio.slug == candidate).first()
+            if not alt_existing:
+                resolved_slug = candidate
+                break
+            counter += 1
         
     db_portfolio = models.Portfolio(
         resume_id=portfolio.resume_id,
-        slug=portfolio.slug.lower().strip(),
+        slug=resolved_slug,
         title=portfolio.title,
         theme=portfolio.theme,
         customizations=portfolio.customizations
