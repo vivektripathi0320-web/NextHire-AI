@@ -1,73 +1,72 @@
-# React + TypeScript + Vite
+# NextHire AI - Frontend Workspace
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+NextHire AI's frontend is a premium, fully-responsive SPA built with React, TypeScript, Tailwind CSS, and Framer Motion. It delivers a glassmorphic dark-themed user experience for resume generation, ATS scoring dashboards, tailoring bullet points, matching job descriptions, and custom portfolio compilation.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🛠️ Tech Stack & Requirements
 
-## React Compiler
+*   **Runtime**: Node.js v18+ (npm v9+)
+*   **Core**: React 18 (TypeScript)
+*   **Bundler**: Vite
+*   **Styling**: Tailwind CSS v3
+*   **Animations**: Framer Motion
+*   **Icons**: Lucide React
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## 🚀 Local Setup Instructions
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+1.  **Navigate to the frontend directory**:
+    ```bash
+    cd frontend
+    ```
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+2.  **Install project dependencies**:
+    ```bash
+    npm install
+    ```
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+3.  **Configure Environment Variables**:
+    Create a `.env` file in the `frontend/` directory:
+    ```env
+    VITE_API_URL=http://localhost:8000
+    ```
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+4.  **Run the local development server**:
+    ```bash
+    npm run dev
+    ```
+    The dev server will startup at [http://localhost:5173/](http://localhost:5173/).
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+5.  **Compile production bundle**:
+    To compile and verify production type safety checks:
+    ```bash
+    npm run build
+    ```
+    The compiled client bundle will be outputted to `frontend/dist/`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+---
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## 🎨 Visual Tokens & Design System
+
+*   **Background**: `#09090B` (Clean deep charcoal black)
+*   **Card Surface**: `#111114` (Frosted glassmorphism background with `backdrop-filter: blur(12px)`)
+*   **Primary Accent**: `#7C3AED` (Violet brand color with neon glow effects)
+*   **Secondary Accent**: `#3B82F6` (Royal blue highlights)
+*   **Success**: `#10B981` (Emerald green for high match ratings)
+*   **Premium Accent**: `#D4AF37` (Bright gold for pro features)
+*   **Fonts**: *Space Grotesk* (headings) and *Inter* (body text)
+*   **Animations**: Custom sliding active navigation indicator underlines and Framer Motion page transitions.
+
+---
+
+## 📂 Page Route Architecture
+
+*   `/` - Landing page with animated feature cards.
+*   `/resume-generator` - AI resume builder workspace with a real-time paper page sheet preview.
+*   `/resume-enhancer` - Accomplishment tailoring page splitting rewrites into Situation/Task/Action/Result cards.
+*   `/ats-analyzer` - Saved resumes compliance scanner featuring SVG radial progress gauges.
+*   `/portfolio-builder` - Portfolio customization control room supporting 4 theme selectors.
+*   `/portfolio/:slug` - Standalone personal website layouts (classic-dark, modern-glass, neon-future, minimalist-light).
+*   `/jd-matcher` - Job description text comparators showing matched/missing competencies.
