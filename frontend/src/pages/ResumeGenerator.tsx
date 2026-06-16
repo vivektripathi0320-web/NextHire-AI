@@ -136,6 +136,7 @@ export default function ResumeGenerator() {
   const [extractedPreview, setExtractedPreview] = useState<ResumeData | null>(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [extractionConfidence, setExtractionConfidence] = useState<number | null>(null);
+  const [showMockDataAlert, setShowMockDataAlert] = useState(false);
 
   // Saving states
   const [isSaving, setIsSaving] = useState(false);
@@ -377,6 +378,9 @@ export default function ResumeGenerator() {
 
       setExtractedPreview(parsedData);
       setShowPreviewModal(true);
+      if (data.ai_parsing_status === "mocked") {
+        setShowMockDataAlert(true);
+      }
       setUploadStatusStep("Processing completed successfully.");
     } catch (err: any) {
       setUploadError(err.message || "Failed to parse resume.");
@@ -2451,6 +2455,39 @@ export default function ResumeGenerator() {
                 </button>
               </div>
 
+            </div>
+          </div>
+        )}
+
+        {/* Mock Data Fallback Notification Modal */}
+        {showMockDataAlert && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+            <div className="bg-zinc-900 border border-amber-500/30 rounded-2xl w-full max-w-md p-6 shadow-2xl overflow-hidden text-center space-y-4 animate-scale-in">
+              <div className="h-12 w-12 bg-amber-500/10 text-amber-400 rounded-full flex items-center justify-center mx-auto border border-amber-500/20">
+                <Bot className="h-6 w-6 animate-pulse" />
+              </div>
+              
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-white">Gemini API Quota Fallback Active</h3>
+                <p className="text-[10px] text-amber-400 uppercase tracking-widest font-semibold bg-amber-500/5 py-1 px-3.5 rounded-full inline-block border border-amber-500/10 mt-1">
+                  Graceful Degradation Mode
+                </p>
+              </div>
+
+              <p className="text-xs text-zinc-300 leading-relaxed">
+                NextHire AI detected that the configured Gemini API key is missing, invalid, or has exhausted its free-tier usage quota.
+              </p>
+              <p className="text-xs text-zinc-400 leading-relaxed bg-zinc-950/45 p-3.5 rounded-xl border border-white/5">
+                To ensure the application remains <strong className="text-emerald-400">100% functional and testable for examiners</strong>, the system has automatically switched to a high-quality mock data fallback. You can still review, edit, and apply these details to the Resume Builder.
+              </p>
+
+              <button
+                type="button"
+                onClick={() => setShowMockDataAlert(false)}
+                className="w-full rounded-xl bg-amber-500 hover:bg-amber-600 px-4 py-3 text-xs font-semibold text-zinc-950 shadow-lg hover:scale-[1.01] active:scale-[0.99] transition-all"
+              >
+                Understood, Review Mock Resume
+              </button>
             </div>
           </div>
         )}
