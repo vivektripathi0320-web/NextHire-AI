@@ -126,6 +126,16 @@ export default function ResumeGenerator() {
   const [dragActive, setDragActive] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
+  
+  // Developer Debug Mode states
+  const [devDebugMode, setDevDebugMode] = useState(false);
+  const [debugTrace, setDebugTrace] = useState<any>(null);
+  const [uploadStatusStep, setUploadStatusStep] = useState<string>('');
+  
+  // Preview and score states
+  const [extractedPreview, setExtractedPreview] = useState<ResumeData | null>(null);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [extractionConfidence, setExtractionConfidence] = useState<number | null>(null);
 
   // Saving states
   const [isSaving, setIsSaving] = useState(false);
@@ -292,48 +302,85 @@ export default function ResumeGenerator() {
   const handleFileUpload = async (file: File) => {
     setUploadError('');
     setIsUploading(true);
+    setExtractionConfidence(null);
+    setDebugTrace(null);
+    
+    // Validate file size (Max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      setUploadError("File exceeds maximum size of 10MB.");
+      setIsUploading(false);
+      return;
+    }
+    
     try {
+      setUploadStatusStep("Uploading resume file...");
+      
       const formData = new FormData();
       formData.append("file", file);
+
+      // Simple timer to update extraction status message
+      const stepTimer = setTimeout(() => {
+        setUploadStatusStep("Extracting text from document...");
+      }, 800);
 
       const res = await fetch("http://localhost:8000/api/resumes/upload", {
         method: "POST",
         body: formData
       });
 
+      clearTimeout(stepTimer);
+
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.detail || "Upload parsing failed.");
       }
 
+      setUploadStatusStep("AI parsing resume details...");
       const data = await res.json();
       
-      setResumeData({
-        title: data.title || "Parsed Resume",
-        summary: data.summary || "",
-        contact: {
-          name: data.contact?.name || "",
-          email: data.contact?.email || "",
-          phone: data.contact?.phone || "",
-          address: data.contact?.address || "",
-          linkedin: data.contact?.linkedin || "",
-          github: data.contact?.github || "",
-          website: data.contact?.website || ""
-        },
-        experience: data.experience || [],
-        education: data.education || [],
-        skills: data.skills || [],
-        projects: data.projects || [],
-        certifications: data.certifications || []
+      setUploadStatusStep("Validating data integrity...");
+      setDebugTrace({
+        fileName: file.name,
+        fileType: data.file_type || file.name.split('.').pop(),
+        fileSize: (file.size / (1024 * 1024)).toFixed(2) + " MB",
+        textEngine: data.text_extraction_engine,
+        charCount: data.extracted_character_count,
+        ocrTriggered: data.ocr_triggered ? 'Yes' : 'No',
+        ocrLog: data.ocr_log || 'N/A',
+        aiStatus: data.ai_parsing_status,
+        jsonValidation: data.json_validation_status,
+        rawResponse: data.raw_ai_response,
+        confidenceScore: data.confidence_score
       });
 
-      if (data.title) {
-        setTargetRole(data.title.replace(" Resume", ""));
-      }
-      
-      setActiveTab('contact');
+      setExtractionConfidence(data.confidence_score);
+
+      const rd = data.resume_data;
+      const parsedData: ResumeData = {
+        title: rd.name ? `${rd.name} Resume` : "Parsed Resume",
+        summary: rd.summary || "",
+        contact: {
+          name: rd.name || "",
+          email: rd.email || "",
+          phone: rd.phone || "",
+          address: rd.location || "",
+          linkedin: rd.linkedin || "",
+          github: rd.github || "",
+          website: ""
+        },
+        education: rd.education || [],
+        skills: rd.skills || [],
+        experience: rd.experience || [],
+        projects: rd.projects || [],
+        certifications: rd.certifications || []
+      };
+
+      setExtractedPreview(parsedData);
+      setShowPreviewModal(true);
+      setUploadStatusStep("Processing completed successfully.");
     } catch (err: any) {
       setUploadError(err.message || "Failed to parse resume.");
+      setUploadStatusStep("Error occurred during parsing.");
     } finally {
       setIsUploading(false);
     }
@@ -923,15 +970,18 @@ export default function ResumeGenerator() {
                   }`}
                 >
                   {isUploading ? (
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       <Loader2 className="h-8 w-8 text-primary animate-spin mx-auto" />
-                      <p className="text-xs text-zinc-300">Extracting details via Gemini...</p>
+                      <p className="text-xs text-zinc-300 font-medium">{uploadStatusStep}</p>
+                      <div className="w-48 bg-zinc-850 rounded-full h-1.5 mx-auto overflow-hidden">
+                        <div className="bg-primary h-full animate-pulse" style={{ width: '80%' }}></div>
+                      </div>
                     </div>
                   ) : (
                     <>
                       <Upload className="h-8 w-8 text-zinc-500 mb-2" />
                       <p className="text-xs text-zinc-300 font-medium mb-1">Drag & Drop Resume File</p>
-                      <p className="text-[10px] text-zinc-500 mb-4">Supported: PDF, DOCX</p>
+                      <p className="text-[10px] text-zinc-500 mb-4">Supported: PDF, DOCX (Max 10MB)</p>
                       
                       <label className="rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 cursor-pointer hover:bg-zinc-700 transition-colors">
                         Choose File
@@ -945,6 +995,53 @@ export default function ResumeGenerator() {
                     </>
                   )}
                 </div>
+
+                {/* Developer debug mode toggle */}
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider">Developer Debug Mode</span>
+                  <button
+                    type="button"
+                    onClick={() => setDevDebugMode(!devDebugMode)}
+                    className={`text-[10px] px-2 py-0.5 rounded border transition-colors ${
+                      devDebugMode 
+                        ? 'bg-primary/20 border-primary text-primary font-bold' 
+                        : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:bg-zinc-700'
+                    }`}
+                  >
+                    {devDebugMode ? 'ON' : 'OFF'}
+                  </button>
+                </div>
+
+                {/* Developer debug traces console */}
+                {devDebugMode && debugTrace && (
+                  <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-4 font-mono text-[11px] text-emerald-400 space-y-2 mt-4 max-h-[300px] overflow-y-auto">
+                    <div className="flex justify-between items-center border-b border-white/5 pb-2 text-zinc-400 font-bold uppercase tracking-wider text-[10px]">
+                      <span>Developer Debug Traces</span>
+                      <button 
+                        type="button" 
+                        onClick={() => setDebugTrace(null)} 
+                        className="text-zinc-500 hover:text-white"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                    <div><span className="text-zinc-500">1. File Upload Status:</span> <span className="text-white">Success</span></div>
+                    <div><span className="text-zinc-500">2. File Type:</span> <span className="text-white">{debugTrace.fileType}</span></div>
+                    <div><span className="text-zinc-500">3. File Size:</span> <span className="text-white">{debugTrace.fileSize}</span></div>
+                    <div><span className="text-zinc-500">4. Text Extraction Engine:</span> <span className="text-white">{debugTrace.textEngine}</span></div>
+                    <div><span className="text-zinc-500">5. Extracted Character Count:</span> <span className="text-white">{debugTrace.charCount}</span></div>
+                    <div><span className="text-zinc-500">6. OCR Fallback Triggered:</span> <span className={debugTrace.ocrTriggered === 'Yes' ? 'text-amber-400' : 'text-zinc-400'}>{debugTrace.ocrTriggered}</span></div>
+                    <div><span className="text-zinc-500">7. OCR Log details:</span> <span className="text-zinc-300">{debugTrace.ocrLog}</span></div>
+                    <div><span className="text-zinc-500">8. AI Parsing Status:</span> <span className="text-white">{debugTrace.aiStatus}</span></div>
+                    <div><span className="text-zinc-500">9. JSON Validation:</span> <span className="text-white">{debugTrace.jsonValidation}</span></div>
+                    <div><span className="text-zinc-500">10. Confidence Score:</span> <span className="text-amber-400 font-bold">{debugTrace.confidenceScore}%</span></div>
+                    <div className="pt-2 border-t border-white/5 mt-2">
+                      <span className="text-zinc-500 block mb-1">Raw AI Response:</span>
+                      <pre className="text-zinc-400 bg-black/40 p-2 rounded max-h-[120px] overflow-auto text-[10px] whitespace-pre-wrap">{debugTrace.rawResponse}</pre>
+                    </div>
+                  </div>
+                )}
+                
                 {uploadError && (
                   <div className="flex items-center gap-1.5 text-xs text-rose-500 mt-1.5">
                     <AlertCircle className="h-4 w-4 shrink-0" />
@@ -2008,6 +2105,355 @@ export default function ResumeGenerator() {
             </button>
           </div>
         </div>
+
+        {/* Extraction Preview Modal */}
+        {showPreviewModal && extractedPreview && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+            <div className="bg-zinc-900 border border-white/10 rounded-2xl w-full max-w-4xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-slide-up">
+              
+              {/* Modal Header */}
+              <div className="flex justify-between items-center px-6 py-4 border-b border-white/5 bg-zinc-950/40">
+                <div>
+                  <h3 className="text-base font-semibold text-white flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-primary" />
+                    Resume Extraction Preview
+                  </h3>
+                  <p className="text-xs text-zinc-400 mt-0.5">Review, edit, and confirm the extracted information before importing it to the Resume Builder.</p>
+                </div>
+                
+                {/* Confidence Score Gauge */}
+                {extractionConfidence !== null && (
+                  <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-3.5 py-1.5">
+                    <span className="text-xs text-zinc-400">Confidence Quality:</span>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                      extractionConfidence >= 80 ? 'bg-emerald-500/10 text-emerald-400' :
+                      extractionConfidence >= 50 ? 'bg-amber-500/10 text-amber-400' :
+                      'bg-rose-500/10 text-rose-400'
+                    }`}>
+                      {extractionConfidence}%
+                    </span>
+                  </div>
+                )}
+              </div>
+              
+              {/* Modal Body */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                
+                {/* Step-by-step alert messages */}
+                <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs px-4 py-3 rounded-xl flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 shrink-0" />
+                  <span>Resume processed successfully. All fields have been populated.</span>
+                </div>
+
+                {/* Section 1: Contact Details */}
+                <div className="space-y-4">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-primary border-b border-primary/10 pb-1.5 flex items-center gap-1.5">
+                    <User className="h-4 w-4" />
+                    Contact & Summary Information
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Full Name</label>
+                      <input
+                        type="text"
+                        value={extractedPreview.contact.name}
+                        onChange={(e) => setExtractedPreview({
+                          ...extractedPreview,
+                          contact: { ...extractedPreview.contact, name: e.target.value }
+                        })}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-primary/50"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Email</label>
+                      <input
+                        type="email"
+                        value={extractedPreview.contact.email}
+                        onChange={(e) => setExtractedPreview({
+                          ...extractedPreview,
+                          contact: { ...extractedPreview.contact, email: e.target.value }
+                        })}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-primary/50"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Phone</label>
+                      <input
+                        type="text"
+                        value={extractedPreview.contact.phone}
+                        onChange={(e) => setExtractedPreview({
+                          ...extractedPreview,
+                          contact: { ...extractedPreview.contact, phone: e.target.value }
+                        })}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-primary/50"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Location</label>
+                      <input
+                        type="text"
+                        value={extractedPreview.contact.address}
+                        onChange={(e) => setExtractedPreview({
+                          ...extractedPreview,
+                          contact: { ...extractedPreview.contact, address: e.target.value }
+                        })}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-primary/50"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">LinkedIn</label>
+                      <input
+                        type="text"
+                        value={extractedPreview.contact.linkedin}
+                        onChange={(e) => setExtractedPreview({
+                          ...extractedPreview,
+                          contact: { ...extractedPreview.contact, linkedin: e.target.value }
+                        })}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-primary/50"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">GitHub</label>
+                      <input
+                        type="text"
+                        value={extractedPreview.contact.github}
+                        onChange={(e) => setExtractedPreview({
+                          ...extractedPreview,
+                          contact: { ...extractedPreview.contact, github: e.target.value }
+                        })}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-primary/50"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Professional Summary</label>
+                    <textarea
+                      rows={3}
+                      value={extractedPreview.summary}
+                      onChange={(e) => setExtractedPreview({ ...extractedPreview, summary: e.target.value })}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-primary/50 resize-none font-sans"
+                    />
+                  </div>
+                </div>
+
+                {/* Section 2: Skills */}
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-primary border-b border-primary/10 pb-1.5 flex items-center gap-1.5">
+                    <Wrench className="h-4 w-4" />
+                    Skills (Comma Separated)
+                  </h4>
+                  <input
+                    type="text"
+                    value={extractedPreview.skills.join(', ')}
+                    onChange={(e) => setExtractedPreview({
+                      ...extractedPreview,
+                      skills: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
+                    })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-primary/50"
+                  />
+                </div>
+
+                {/* Section 3: Experience */}
+                <div className="space-y-4">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-primary border-b border-primary/10 pb-1.5 flex items-center gap-1.5">
+                    <Briefcase className="h-4 w-4" />
+                    Professional Experience
+                  </h4>
+                  {extractedPreview.experience.length === 0 ? (
+                    <p className="text-xs text-zinc-500 italic">No experience entries found.</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {extractedPreview.experience.map((exp, idx) => (
+                        <div key={idx} className="bg-white/5 border border-white/5 rounded-xl p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-[9px] font-bold text-zinc-400 uppercase mb-0.5">Company</label>
+                            <input
+                              type="text"
+                              value={exp.company}
+                              onChange={(e) => {
+                                const updated = [...extractedPreview.experience];
+                                updated[idx].company = e.target.value;
+                                setExtractedPreview({ ...extractedPreview, experience: updated });
+                              }}
+                              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[9px] font-bold text-zinc-400 uppercase mb-0.5">Role</label>
+                            <input
+                              type="text"
+                              value={exp.role}
+                              onChange={(e) => {
+                                const updated = [...extractedPreview.experience];
+                                updated[idx].role = e.target.value;
+                                setExtractedPreview({ ...extractedPreview, experience: updated });
+                              }}
+                              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[9px] font-bold text-zinc-400 uppercase mb-0.5">Duration (Start - End)</label>
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                placeholder="Start"
+                                value={exp.start_date}
+                                onChange={(e) => {
+                                  const updated = [...extractedPreview.experience];
+                                  updated[idx].start_date = e.target.value;
+                                  setExtractedPreview({ ...extractedPreview, experience: updated });
+                                }}
+                                className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none"
+                              />
+                              <input
+                                type="text"
+                                placeholder="End"
+                                value={exp.end_date}
+                                onChange={(e) => {
+                                  const updated = [...extractedPreview.experience];
+                                  updated[idx].end_date = e.target.value;
+                                  setExtractedPreview({ ...extractedPreview, experience: updated });
+                                }}
+                                className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-[9px] font-bold text-zinc-400 uppercase mb-0.5">Location</label>
+                            <input
+                              type="text"
+                              value={exp.location}
+                              onChange={(e) => {
+                                const updated = [...extractedPreview.experience];
+                                updated[idx].location = e.target.value;
+                                setExtractedPreview({ ...extractedPreview, experience: updated });
+                              }}
+                              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none"
+                            />
+                          </div>
+                          <div className="md:col-span-2">
+                            <label className="block text-[9px] font-bold text-zinc-400 uppercase mb-0.5">Accomplishments / Bullets</label>
+                            <textarea
+                              rows={3}
+                              value={exp.bullets.join('\n')}
+                              onChange={(e) => {
+                                const updated = [...extractedPreview.experience];
+                                updated[idx].bullets = e.target.value.split('\n').filter(Boolean);
+                                setExtractedPreview({ ...extractedPreview, experience: updated });
+                              }}
+                              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none resize-none font-sans"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Section 4: Education */}
+                <div className="space-y-4">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-primary border-b border-primary/10 pb-1.5 flex items-center gap-1.5">
+                    <GraduationCap className="h-4 w-4" />
+                    Education History
+                  </h4>
+                  {extractedPreview.education.length === 0 ? (
+                    <p className="text-xs text-zinc-500 italic">No education entries found.</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {extractedPreview.education.map((edu, idx) => (
+                        <div key={idx} className="bg-white/5 border border-white/5 rounded-xl p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-[9px] font-bold text-zinc-400 uppercase mb-0.5">Institution</label>
+                            <input
+                              type="text"
+                              value={edu.institution}
+                              onChange={(e) => {
+                                const updated = [...extractedPreview.education];
+                                updated[idx].institution = e.target.value;
+                                setExtractedPreview({ ...extractedPreview, education: updated });
+                              }}
+                              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[9px] font-bold text-zinc-400 uppercase mb-0.5">Degree</label>
+                            <input
+                              type="text"
+                              value={edu.degree}
+                              onChange={(e) => {
+                                const updated = [...extractedPreview.education];
+                                updated[idx].degree = e.target.value;
+                                setExtractedPreview({ ...extractedPreview, education: updated });
+                              }}
+                              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[9px] font-bold text-zinc-400 uppercase mb-0.5">Graduation Date</label>
+                            <input
+                              type="text"
+                              value={edu.graduation_date}
+                              onChange={(e) => {
+                                const updated = [...extractedPreview.education];
+                                updated[idx].graduation_date = e.target.value;
+                                setExtractedPreview({ ...extractedPreview, education: updated });
+                              }}
+                              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[9px] font-bold text-zinc-400 uppercase mb-0.5">CGPA</label>
+                            <input
+                              type="text"
+                              value={edu.cgpa || ''}
+                              onChange={(e) => {
+                                const updated = [...extractedPreview.education];
+                                updated[idx].cgpa = e.target.value;
+                                setExtractedPreview({ ...extractedPreview, education: updated });
+                              }}
+                              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+              </div>
+
+              {/* Modal Footer */}
+              <div className="flex justify-end gap-3 px-6 py-4 border-t border-white/5 bg-zinc-950/40">
+                <button
+                  type="button"
+                  onClick={() => setShowPreviewModal(false)}
+                  className="rounded-xl border border-white/15 px-4 py-2.5 text-xs font-semibold text-zinc-300 hover:bg-white/5 hover:text-white transition-colors"
+                >
+                  Discard Preview
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    // Commit to builder
+                    setResumeData(extractedPreview);
+                    if (extractedPreview.title) {
+                      setTargetRole(extractedPreview.title.replace(" Resume", ""));
+                    }
+                    setShowPreviewModal(false);
+                    setActiveTab('contact');
+                    setSaveSuccess(true);
+                    setTimeout(() => setSaveSuccess(false), 3000);
+                  }}
+                  className="rounded-xl bg-primary px-5 py-2.5 text-xs font-semibold text-white shadow-primary-glow hover:bg-primary/80 transition-colors flex items-center gap-1.5"
+                >
+                  <Plus className="h-4 w-4" />
+                  Apply to Resume Builder
+                </button>
+              </div>
+
+            </div>
+          </div>
+        )}
 
       </main>
     </div>

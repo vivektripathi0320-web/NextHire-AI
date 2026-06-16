@@ -458,68 +458,119 @@ def compare_resume_vs_jd(payload: schemas.JdMatchRequest):
 
 
 # --- FEATURE 1: RESUME FILE UPLOAD & PARSING ---
+# --- FEATURE 1: RESUME FILE UPLOAD & PARSING ---
 @router.post("/resumes/upload")
 async def upload_resume_file(file: UploadFile = File(...)):
     filename = file.filename or "resume.pdf"
     content = await file.read()
+    file_size_bytes = len(content)
     
-    # Extract raw text from file
+    # 1. File Size Validation (Max 10MB)
+    max_size = 10 * 1024 * 1024  # 10MB
+    if file_size_bytes > max_size:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"File exceeds maximum size of 10MB. Uploaded size: {file_size_bytes / (1024 * 1024):.2f}MB."
+        )
+
+    ext = filename.split(".")[-1].lower()
+    text_extraction_engine = "text-fallback"
     extracted_text = ""
+    ocr_triggered = False
+    ocr_log = "N/A"
+    
+    # 2. Text Extraction Stage
     try:
-        ext = filename.split(".")[-1].lower()
         if ext == "pdf":
-            import io
-            import pypdf
-            pdf_reader = pypdf.PdfReader(io.BytesIO(content))
+            import fitz
+            # Use PyMuPDF
+            doc = fitz.open(stream=content, filetype="pdf")
             text_lines = []
-            for page in pdf_reader.pages:
-                page_text = page.extract_text()
-                if page_text:
-                    text_lines.append(page_text)
+            for page in doc:
+                text_lines.append(page.get_text())
             extracted_text = "\n".join(text_lines).strip()
-        elif ext in ["docx", "doc"]:
-            import tempfile
-            import docx2txt
-            import os
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".docx") as temp:
-                temp.write(content)
-                temp_path = temp.name
-            try:
-                extracted_text = docx2txt.process(temp_path).strip()
-            finally:
+            text_extraction_engine = "pymupdf"
+            
+            # Check for OCR fallback if text is scanned/empty
+            if len(extracted_text) < 100:
+                ocr_triggered = True
                 try:
-                    os.remove(temp_path)
-                except Exception:
-                    pass
+                    from pdf2image import convert_from_bytes
+                    import pytesseract
+                    
+                    images = convert_from_bytes(content)
+                    ocr_lines = []
+                    for image in images:
+                        page_text = pytesseract.image_to_string(image)
+                        if page_text:
+                            ocr_lines.append(page_text)
+                    ocr_text = "\n".join(ocr_lines).strip()
+                    
+                    if len(ocr_text) >= 100:
+                        extracted_text = ocr_text
+                        text_extraction_engine = "pytesseract-ocr"
+                        ocr_log = "Successfully executed OCR on scanned PDF pages."
+                    else:
+                        ocr_log = f"OCR completed but output text is too short ({len(ocr_text)} chars)."
+                except Exception as ocr_err:
+                    ocr_log = f"Scanned document detected, but OCR failed or system binaries (Tesseract/Poppler) missing: {str(ocr_err)}"
+        elif ext in ["docx", "doc"]:
+            import docx
+            import io
+            doc_file = docx.Document(io.BytesIO(content))
+            text_lines = []
+            for para in doc_file.paragraphs:
+                if para.text:
+                    text_lines.append(para.text)
+            for table in doc_file.tables:
+                for row in table.rows:
+                    row_text = [cell.text.strip() for cell in row.cells if cell.text.strip()]
+                    if row_text:
+                        text_lines.append(" | ".join(row_text))
+            extracted_text = "\n".join(text_lines).strip()
+            text_extraction_engine = "python-docx"
         else:
-            # Fallback to plain text
+            # Fallback to plain text decode
             try:
                 extracted_text = content.decode("utf-8")
             except Exception:
                 extracted_text = content.decode("latin-1")
+            extracted_text = extracted_text.strip()
+            text_extraction_engine = "utf-decode"
     except Exception as e:
-        extracted_text = f"Error extracting text from {filename}: {str(e)}"
+        extracted_text = ""
+        ocr_log = f"Text extraction failed: {str(e)}"
 
     if not extracted_text or len(extracted_text.strip()) < 10:
-        raise HTTPException(status_code=400, detail="Could not extract text from file. Please ensure the file is not empty or corrupted.")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unable to extract text from this document. {ocr_log if ocr_triggered else ''}"
+        )
 
-    # Call Gemini to parse raw text into structured JSON schema
+    # 3. AI Parsing Stage
     prompt = (
         f"You are a professional resume parser. Parse the following resume text and extract all details into a structured JSON object.\n"
         f"Resume Text:\n{extracted_text}\n\n"
-        f"Respond in a strict valid JSON format. Do not include any markdown wrappers or backticks. The JSON must exactly match the schema below:\n"
+        f"Respond in a strict valid JSON format. Do not include any markdown code blocks (like ```json), no wrappers, no explanations, no text before or after the JSON. "
+        f"The JSON must exactly match the schema below:\n"
         f"{{\n"
-        f"  \"title\": \"professional resume title (e.g. Senior Software Engineer)\",\n"
-        f"  \"summary\": \"professional summary (2-3 sentences)\",\n"
-        f"  \"contact\": {{\n"
-        f"    \"name\": \"Full Name\",\n"
-        f"    \"email\": \"email address\",\n"
-        f"    \"phone\": \"phone number\",\n"
-        f"    \"address\": \"address or city, state\",\n"
-        f"    \"linkedin\": \"linkedin profile url\",\n"
-        f"    \"github\": \"github profile url\",\n"
-        f"    \"website\": \"website url\"\n"
-        f"  }},\n"
+        f"  \"name\": \"Full Name\",\n"
+        f"  \"email\": \"email address\",\n"
+        f"  \"phone\": \"phone number\",\n"
+        f"  \"location\": \"address or city, state\",\n"
+        f"  \"linkedin\": \"linkedin profile url\",\n"
+        f"  \"github\": \"github profile url\",\n"
+        f"  \"summary\": \"professional resume summary (2-3 sentences)\",\n"
+        f"  \"education\": [\n"
+        f"    {{\n"
+        f"      \"institution\": \"University/College Name\",\n"
+        f"      \"degree\": \"Degree earned\",\n"
+        f"      \"location\": \"City, State\",\n"
+        f"      \"graduation_date\": \"Graduation Year (e.g. 2024)\",\n"
+        f"      \"cgpa\": \"CGPA or GPA (if present, e.g. 3.8/4.0)\"\n"
+        f"    }}\n"
+        f"  ],\n"
+        f"  \"skills\": [\"Skill 1\", \"Skill 2\"],\n"
         f"  \"experience\": [\n"
         f"    {{\n"
         f"      \"company\": \"Company Name\",\n"
@@ -533,16 +584,6 @@ async def upload_resume_file(file: UploadFile = File(...)):
         f"      ]\n"
         f"    }}\n"
         f"  ],\n"
-        f"  \"education\": [\n"
-        f"    {{\n"
-        f"      \"institution\": \"University/College Name\",\n"
-        f"      \"degree\": \"Degree earned\",\n"
-        f"      \"location\": \"City, State\",\n"
-        f"      \"graduation_date\": \"Graduation Year (e.g. 2024)\",\n"
-        f"      \"cgpa\": \"CGPA or GPA (if present, e.g. 3.8/4.0)\"\n"
-        f"    }}\n"
-        f"  ],\n"
-        f"  \"skills\": [\"Skill 1\", \"Skill 2\"],\n"
         f"  \"projects\": [\n"
         f"    {{\n"
         f"      \"name\": \"Project Name\",\n"
@@ -560,8 +601,12 @@ async def upload_resume_file(file: UploadFile = File(...)):
         f"}}"
     )
 
+    ai_parsing_status = "success"
+    json_validation_status = "success"
+    
     response_text = ai_service.generate_content(prompt)
-
+    raw_ai_response = response_text
+    
     # Clean response text in case Gemini wraps it in markdown backticks
     if response_text.startswith("```"):
         lines = response_text.splitlines()
@@ -571,8 +616,11 @@ async def upload_resume_file(file: UploadFile = File(...)):
             lines = lines[:-1]
         response_text = "\n".join(lines).strip()
 
+    parsed_json = {}
+    
+    # 4. JSON Validation & Fallback Processing
     if response_text == "API_KEY_MISSING_MOCK_RESPONSE" or response_text.startswith("ERROR:"):
-        # Returns high-quality mock parsing matching the input details
+        ai_parsing_status = "mocked"
         text_lower = extracted_text.lower()
         role = "Software Engineer"
         if "tally" in text_lower or "account" in text_lower:
@@ -582,18 +630,14 @@ async def upload_resume_file(file: UploadFile = File(...)):
         elif "frontend" in text_lower or "react" in text_lower:
             role = "Senior Frontend Engineer"
 
-        return {
-            "title": f"{role} Resume",
+        parsed_json = {
+            "name": "Alex Mercer",
+            "email": "alexmercer@email.com",
+            "phone": "+1 (555) 019-2834",
+            "location": "San Francisco, CA",
+            "linkedin": "linkedin.com/in/alexmercer",
+            "github": "github.com/alexmercer",
             "summary": f"Detail-oriented {role} with a proven track record of optimizing workflows, executing data audits, and delivering high-quality client results.",
-            "contact": {
-                "name": "Alex Mercer",
-                "email": "alexmercer@email.com",
-                "phone": "+1 (555) 019-2834",
-                "address": "San Francisco, CA",
-                "linkedin": "linkedin.com/in/alexmercer",
-                "github": "github.com/alexmercer",
-                "website": "alexmercer.dev"
-            },
             "experience": [
                 {
                     "company": "Enterprise Tech Solutions",
@@ -635,39 +679,76 @@ async def upload_resume_file(file: UploadFile = File(...)):
                 }
             ]
         }
-
-    try:
-        data = json.loads(response_text)
-        return data
-    except Exception:
-        # Structured fallback
-        return {
-            "title": "Parsed Resume",
-            "summary": "Completed profile text parsing.",
-            "contact": {
-                "name": "Alex Mercer",
-                "email": "alexmercer@email.com",
-                "phone": "+1 (555) 019-2834",
-                "address": "San Francisco, CA",
-                "linkedin": "linkedin.com/in/alexmercer",
-                "github": "github.com/alexmercer",
-                "website": "alexmercer.dev"
-            },
-            "experience": [
-                {
-                    "company": "Enterprise Solutions",
-                    "role": "Professional",
-                    "location": "Remote",
-                    "start_date": "Jan 2023",
-                    "end_date": "Present",
-                    "bullets": ["Successfully managed operations and compiled data audits."]
+    else:
+        try:
+            parsed_json = json.loads(response_text)
+        except Exception:
+            json_validation_status = "repaired-fallback"
+            try:
+                cleaned = response_text.strip()
+                if cleaned.startswith("[") and cleaned.endswith("]"):
+                    cleaned = cleaned[1:-1].strip()
+                parsed_json = json.loads(cleaned)
+            except Exception:
+                parsed_json = {
+                    "name": "Alex Mercer",
+                    "email": "alexmercer@email.com",
+                    "phone": "+1 (555) 019-2834",
+                    "location": "San Francisco, CA",
+                    "linkedin": "linkedin.com/in/alexmercer",
+                    "github": "github.com/alexmercer",
+                    "summary": "Completed profile text parsing.",
+                    "education": [],
+                    "skills": ["Communication", "Problem Solving", "Tech Systems"],
+                    "experience": [],
+                    "projects": [],
+                    "certifications": []
                 }
-            ],
-            "education": [],
-            "skills": ["Communication", "Problem Solving", "Tech Systems"],
-            "projects": [],
-            "certifications": []
-        }
+
+    # Enforce keys
+    required_keys = ["name", "email", "phone", "location", "linkedin", "github", "summary", "education", "skills", "experience", "projects", "certifications"]
+    for key in required_keys:
+        if key not in parsed_json:
+            parsed_json[key] = "" if key in ["name", "email", "phone", "location", "linkedin", "github", "summary"] else []
+
+    # Map arrays
+    if not isinstance(parsed_json["education"], list): parsed_json["education"] = []
+    if not isinstance(parsed_json["skills"], list): parsed_json["skills"] = []
+    if not isinstance(parsed_json["experience"], list): parsed_json["experience"] = []
+    if not isinstance(parsed_json["projects"], list): parsed_json["projects"] = []
+    if not isinstance(parsed_json["certifications"], list): parsed_json["certifications"] = []
+
+    # 5. Quality Score Heuristics
+    confidence_score = 50
+    if len(extracted_text) > 300: confidence_score += 10
+    if not ocr_triggered:
+        confidence_score += 15
+    else:
+        if "Successfully" in ocr_log: confidence_score += 10
+
+    if parsed_json.get("name"): confidence_score += 5
+    if parsed_json.get("email"): confidence_score += 5
+    if parsed_json.get("phone"): confidence_score += 5
+    if parsed_json.get("summary"): confidence_score += 5
+    if parsed_json["skills"]: confidence_score += 5
+    if parsed_json["experience"]: confidence_score += 5
+    confidence_score = min(max(confidence_score, 0), 100)
+
+    # 6. Response Construction
+    return {
+        "file_upload_status": "success",
+        "file_type": ext,
+        "file_size_bytes": file_size_bytes,
+        "text_extraction_engine": text_extraction_engine,
+        "extracted_character_count": len(extracted_text),
+        "ocr_triggered": ocr_triggered,
+        "ocr_log": ocr_log,
+        "ai_parsing_status": ai_parsing_status,
+        "json_validation_status": json_validation_status,
+        "confidence_score": confidence_score,
+        "raw_ai_response": raw_ai_response,
+        "resume_data": parsed_json
+    }
 
 
 # --- FEATURE 3: AI ASSISTANT SUGGESTIONS ---

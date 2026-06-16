@@ -98,9 +98,21 @@ class TestEndpoints(unittest.TestCase):
         response = self.client.post("/api/resumes/upload", files=files)
         self.assertEqual(response.status_code, 200)
         data = response.json()
-        self.assertIn("contact", data)
-        self.assertEqual(data["contact"]["name"], "Alex Mercer")
-        self.assertEqual(data["contact"]["email"], "alexmercer@email.com")
+        self.assertEqual(data["file_upload_status"], "success")
+        self.assertEqual(data["text_extraction_engine"], "utf-decode")
+        self.assertIn("resume_data", data)
+        self.assertEqual(data["resume_data"]["name"], "Alex Mercer")
+        self.assertEqual(data["resume_data"]["email"], "alexmercer@email.com")
+
+    def test_resume_upload_too_large(self):
+        # Create dummy file > 10MB
+        large_content = b"A" * (10 * 1024 * 1024 + 10)
+        files = {"file": ("resume.pdf", large_content, "application/pdf")}
+        response = self.client.post("/api/resumes/upload", files=files)
+        self.assertEqual(response.status_code, 400)
+        data = response.json()
+        self.assertIn("detail", data)
+        self.assertIn("File exceeds maximum size", data["detail"])
 
 if __name__ == "__main__":
     unittest.main()
