@@ -42,8 +42,8 @@ export default function Layout() {
                   key={item.path}
                   to={item.path}
                   className={({ isActive }) =>
-                    `text-sm font-medium transition-colors hover:text-white ${
-                      isActive ? 'text-primary' : 'text-zinc-400'
+                    `text-sm font-medium transition-all duration-300 hover:text-white ${
+                      isActive ? 'text-primary nav-active-glow' : 'text-zinc-400'
                     }`
                   }
                 >
@@ -62,7 +62,7 @@ export default function Layout() {
               </Link>
               <Link
                 to="/resume-generator"
-                className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white shadow-primary-glow transition-all hover:bg-primary/80 hover:scale-[1.02] active:scale-[0.98]"
+                className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white shadow-primary-glow transition-all hover:bg-primary/80 hover:scale-[1.02] active:scale-[0.98] pulse-glow-button"
               >
                 Get Started
                 <ArrowRight className="h-4 w-4" />

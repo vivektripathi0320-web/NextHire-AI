@@ -1,8 +1,14 @@
 import { Sparkles, HelpCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function About() {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center py-20 px-4 max-w-7xl mx-auto text-center relative">
+    <motion.div 
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      className="flex-1 flex flex-col items-center justify-center py-20 px-4 max-w-7xl mx-auto text-center relative"
+    >
       <div className="absolute top-[20%] left-[10%] w-[300px] h-[300px] bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
       
       <div className="glass-card rounded-2xl p-10 max-w-2xl relative border-glow-primary/10">
@@ -39,6 +45,6 @@ export default function About() {
           </span>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
