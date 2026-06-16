@@ -80,3 +80,10 @@ class EnhancementResponse(BaseModel):
     original: str
     enhanced: str
     changes_made: str
+
+
+# --- RESUME GENERATOR SCHEMAS ---
+class ResumeGenerateRequest(BaseModel):
+    prompt: str
+    target_role: Optional[str] = None
+

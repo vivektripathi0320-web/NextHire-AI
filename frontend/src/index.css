@@ -75,4 +75,26 @@
   ::-webkit-scrollbar-thumb:hover {
     background: #2E2E35;
   }
+
+  /* Print Styles */
+  @media print {
+    body, html {
+      background: white !important;
+      color: black !important;
+    }
+    header, footer, .no-print {
+      display: none !important;
+    }
+    .print-sheet {
+      border: none !important;
+      box-shadow: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      color: black !important;
+      background: white !important;
+    }
+  }
 }
+

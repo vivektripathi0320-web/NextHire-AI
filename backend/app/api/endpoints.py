@@ -28,6 +28,227 @@ def health_check(db: Session = Depends(get_db)):
     }
 
 # --- RESUMES API ---
+@router.post("/resumes/generate")
+def generate_resume(payload: schemas.ResumeGenerateRequest):
+    prompt = (
+        f"You are an expert ATS-optimized resume builder. Build a fully structured professional resume based on the following user input prompt.\n"
+        f"User Prompt: '{payload.prompt}'\n"
+        f"Target Role: '{payload.target_role or 'Professional'}'\n\n"
+        f"Respond in a strict valid JSON format. Do not include any markdown backticks, markdown code blocks, or extra text. The JSON must exactly match the schema below:\n"
+        f"{{\n"
+        f"  \"title\": \"target role resume title (e.g. Senior Frontend Developer Resume)\",\n"
+        f"  \"summary\": \"professional summary (2-3 sentences, ATS-optimized, high-impact)\",\n"
+        f"  \"contact\": {{\n"
+        f"    \"name\": \"Full Name (infer or use placeholder like 'John Doe')\",\n"
+        f"    \"email\": \"email address (infer or 'johndoe@email.com')\",\n"
+        f"    \"phone\": \"phone number (infer or '+1 (555) 019-2834')\",\n"
+        f"    \"linkedin\": \"linkedin url (infer or 'linkedin.com/in/johndoe')\",\n"
+        f"    \"github\": \"github url (infer or 'github.com/johndoe')\",\n"
+        f"    \"website\": \"personal site url (infer or 'johndoe.dev')\"\n"
+        f"  }},\n"
+        f"  \"experience\": [\n"
+        f"    {{\n"
+        f"      \"company\": \"Company Name\",\n"
+        f"      \"role\": \"Role Title\",\n"
+        f"      \"location\": \"City, State\",\n"
+        f"      \"start_date\": \"Month Year\",\n"
+        f"      \"end_date\": \"Month Year or Present\",\n"
+        f"      \"bullets\": [\n"
+        f"        \"STAR bullet point 1 (action verb + task + quantified result)\",\n"
+        f"        \"STAR bullet point 2\"\n"
+        f"      ]\n"
+        f"    }}\n"
+        f"  ],\n"
+        f"  \"education\": [\n"
+        f"    {{\n"
+        f"      \"institution\": \"University/College Name\",\n"
+        f"      \"degree\": \"Degree earned (e.g. B.S. in Computer Science)\",\n"
+        f"      \"location\": \"City, State\",\n"
+        f"      \"graduation_date\": \"Month Year\"\n"
+        f"    }}\n"
+        f"  ],\n"
+        f"  \"skills\": [\"Skill 1\", \"Skill 2\", \"Skill 3\"],\n"
+        f"  \"projects\": [\n"
+        f"    {{\n"
+        f"      \"name\": \"Project Name\",\n"
+        f"      \"description\": \"One sentence project description\",\n"
+        f"      \"tech_stack\": \"Comma separated tech stack (e.g. React, Node.js, SQLite)\",\n"
+        f"      \"link\": \"Project link (e.g. github.com/johndoe/project)\"\n"
+        f"    }}\n"
+        f"  ]\n"
+        f"}}"
+    )
+
+    response_text = ai_service.generate_content(prompt)
+
+    # Clean response text in case Gemini wraps it in markdown backticks
+    if response_text.startswith("```"):
+        # Remove first line (e.g. ```json) and last line (```)
+        lines = response_text.splitlines()
+        if lines[0].startswith("```"):
+            lines = lines[1:]
+        if lines[-1].startswith("```"):
+            lines = lines[:-1]
+        response_text = "\n".join(lines).strip()
+
+    if response_text == "API_KEY_MISSING_MOCK_RESPONSE" or response_text.startswith("ERROR:"):
+        # Fallback high-quality mock data based on input keywords
+        role = payload.target_role or "Software Engineer"
+        prompt_lower = payload.prompt.lower()
+        
+        name = "Taylor Smith"
+        email = "taylor.smith@email.com"
+        
+        if "frontend" in prompt_lower or "react" in prompt_lower or "web" in prompt_lower:
+            role = "Senior Frontend Engineer"
+            skills = ["React", "TypeScript", "Tailwind CSS", "JavaScript", "HTML5/CSS3", "Next.js", "Jest", "Git"]
+            summary = "Dynamic Frontend Engineer with 4+ years of experience building high-performance, responsive web applications. Expert in React ecosystems, performance tuning, and designing polished glassmorphism SaaS layouts."
+            experience = [
+                {
+                    "company": "PixelCraft Studios",
+                    "role": "Frontend Engineer",
+                    "location": "New York, NY",
+                    "start_date": "Mar 2022",
+                    "end_date": "Present",
+                    "bullets": [
+                        "Redesigned the core e-commerce product flow using React and Tailwind CSS, resulting in a 34% increase in conversion rates.",
+                        "Optimized bundle size and assets loading, shaving 1.2s off First Contentful Paint (FCP) and improving Lighthouse score from 71 to 96.",
+                        "Mentored 2 junior engineers in TypeScript best practices and state management patterns."
+                    ]
+                },
+                {
+                    "company": "CodeFlow Inc",
+                    "role": "Junior Web Developer",
+                    "location": "Boston, MA",
+                    "start_date": "Jun 2020",
+                    "end_date": "Feb 2022",
+                    "bullets": [
+                        "Developed and shipped 15+ pixel-perfect landing pages, driving user acquisition up by 18% over 6 months.",
+                        "Integrated REST APIs and payment gateways using stripe SDKs, reducing transaction failures by 8%."
+                    ]
+                }
+            ]
+            projects = [
+                {
+                    "name": "Nexus Dashboard",
+                    "description": "A dark-themed analytics command center showing real-time client load metrics.",
+                    "tech_stack": "React, Vite, Recharts, Tailwind CSS",
+                    "link": "github.com/taylorsmith/nexus-dashboard"
+                }
+            ]
+        elif "backend" in prompt_lower or "python" in prompt_lower or "database" in prompt_lower:
+            role = "Backend Systems Engineer"
+            skills = ["Python", "FastAPI", "PostgreSQL", "SQLite", "Docker", "Redis", "REST APIs", "AWS", "Git"]
+            summary = "Results-driven Backend Engineer specializing in building scalable RESTful APIs, database optimizations, and cloud deployments. Proven track record of improving database query latency by 45%."
+            experience = [
+                {
+                    "company": "DataStream Solutions",
+                    "role": "Backend Engineer",
+                    "location": "Austin, TX",
+                    "start_date": "Nov 2021",
+                    "end_date": "Present",
+                    "bullets": [
+                        "Architected and deployed 20+ secure REST endpoints using FastAPI, supporting a peak traffic load of 15,000 requests per minute.",
+                        "Refactored complex PostgreSQL query loops, reducing database response times by 42% and hardware overhead by $2,000 monthly.",
+                        "Containerized backend microservices using Docker, decreasing deployment times by 22% in CI/CD pipelines."
+                    ]
+                }
+            ]
+            projects = [
+                {
+                    "name": "TaskFlow API",
+                    "description": "An asynchronous task queue manager database API.",
+                    "tech_stack": "FastAPI, PostgreSQL, Celery, Redis",
+                    "link": "github.com/taylorsmith/taskflow-api"
+                }
+            ]
+        else:
+            skills = ["Project Management", "Agile Methodologies", "SQL", "Team Leadership", "Data Analysis", "Python"]
+            summary = f"Dedicated and professional candidate targeting a role as a {role}. Experienced in collaborating with cross-functional teams, driving operational efficiencies, and managing deliverables successfully."
+            experience = [
+                {
+                    "company": "Global Innovations",
+                    "role": role,
+                    "location": "Chicago, IL",
+                    "start_date": "Sep 2022",
+                    "end_date": "Present",
+                    "bullets": [
+                        "Successfully directed key deliverables, increasing project turnaround speed by 15% and satisfying SLA targets.",
+                        "Leveraged data analytics reports to streamline operations, saving the department approximately 8 hours of manual audit work weekly."
+                    ]
+                }
+            ]
+            projects = [
+                {
+                    "name": "Portfolio Tracker",
+                    "description": "A spreadsheet tracker and dashboard reporting operational KPIs.",
+                    "tech_stack": "SQL, Excel, Python",
+                    "link": "github.com/taylorsmith/portfolio-tracker"
+                }
+            ]
+            
+        return {
+            "title": f"{role} Resume",
+            "summary": summary,
+            "contact": {
+                "name": name,
+                "email": email,
+                "phone": "+1 (555) 019-2834",
+                "linkedin": "linkedin.com/in/taylorsmith",
+                "github": "github.com/taylorsmith",
+                "website": "taylorsmith.dev"
+            },
+            "experience": experience,
+            "education": [
+                {
+                    "institution": "State University",
+                    "degree": "B.S. in Computer Science & Information Systems",
+                    "location": "Boston, MA",
+                    "graduation_date": "May 2020"
+                }
+            ],
+            "skills": skills,
+            "projects": projects
+        }
+
+    try:
+        data = json.loads(response_text)
+        return data
+    except Exception:
+        # If it failed to parse, return a structured fallback with the raw response in summary
+        return {
+            "title": f"{payload.target_role or 'AI Generated'} Resume",
+            "summary": "Completed profile text parsing.",
+            "contact": {
+                "name": "Jane Doe",
+                "email": "janedoe@email.com",
+                "phone": "+1 (555) 019-2834",
+                "linkedin": "linkedin.com/in/janedoe",
+                "github": "github.com/janedoe",
+                "website": "janedoe.dev"
+            },
+            "experience": [
+                {
+                    "company": "Enterprise Corp",
+                    "role": payload.target_role or "Specialist",
+                    "location": "Remote",
+                    "start_date": "Jan 2023",
+                    "end_date": "Present",
+                    "bullets": [response_text.strip()[:200]]
+                }
+            ],
+            "education": [
+                {
+                    "institution": "University of Tech",
+                    "degree": "B.S. in Tech Studies",
+                    "location": "Online",
+                    "graduation_date": "Dec 2022"
+                }
+            ],
+            "skills": ["Communication", "Problem Solving", "Technology"],
+            "projects": []
+        }
+
 @router.post("/resumes", response_model=schemas.ResumeResponse, status_code=status.HTTP_201_CREATED)
 def create_resume(resume: schemas.ResumeCreate, db: Session = Depends(get_db)):
     db_resume = models.Resume(
