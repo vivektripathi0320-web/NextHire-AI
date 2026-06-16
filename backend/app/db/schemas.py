@@ -88,3 +88,25 @@ class ResumeGenerateRequest(BaseModel):
     prompt: str
     target_role: Optional[str] = None
 
+
+# --- AI ASSISTANT SCHEMAS ---
+class AssistantSuggestRequest(BaseModel):
+    field_type: str  # 'summary' | 'achievements' | 'skills' | 'projects'
+    target_role: str
+    current_text: Optional[str] = None
+
+class AssistantSuggestResponse(BaseModel):
+    suggestions: List[str]
+
+class RoleRecommendRequest(BaseModel):
+    target_role: str
+
+class SkillsRecommendResponse(BaseModel):
+    skills: List[str]
+
+class ProjectsRecommendResponse(BaseModel):
+    projects: List[Dict[str, Any]]
+
+class CertificationsRecommendResponse(BaseModel):
+    certifications: List[Dict[str, Any]]
+
