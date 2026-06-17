@@ -1,6 +1,9 @@
 # Node
 .node/
 node_modules/
+.npm-cache/
+package.json
+package-lock.json
 dist/
 build/
 out/
