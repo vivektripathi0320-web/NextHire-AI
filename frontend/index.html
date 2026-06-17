@@ -2,12 +2,141 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    
+    <!-- Browser Tab Title -->
+    <title>NextHire AI | Smart Resumes. Stunning Portfolios. Better Careers.</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Create professional, ATS-friendly resumes, build stunning web portfolios, and generate tailored cover letters using NextHire AI. Boost your career options today." />
+    <meta name="keywords" content="AI Resume Builder, ATS Resume Analyzer, Portfolio Generator, Career Platform, AI Cover Letter Generator, NextHire AI" />
+    <meta name="author" content="NextHire AI" />
+    <link rel="canonical" href="https://nexthire.ai" />
+
+    <!-- Theme Colors -->
+    <meta name="theme-color" content="#7C3AED" />
+    <meta name="msapplication-TileColor" content="#09090B" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <!-- Favicon & Touch Icon System -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png" />
+    <link rel="icon" type="image/png" sizes="64x64" href="/favicon-64x64.png" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
+    <link rel="icon" type="image/png" sizes="128x128" href="/favicon-128x128.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192x192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/favicon-512x512.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    
+    <!-- Manifest file -->
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- Open Graph (Facebook, LinkedIn, Discord, etc.) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="NextHire AI | Smart Resumes. Stunning Portfolios. Better Careers." />
+    <meta property="og:description" content="Build stunning portfolios, optimize resume bullet points, analyze ATS scores, and generate tailored cover letters with NextHire AI." />
+    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:url" content="https://nexthire.ai" />
+    <meta property="og:site_name" content="NextHire AI" />
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="NextHire AI | Smart Resumes. Stunning Portfolios. Better Careers." />
+    <meta name="twitter:description" content="Build stunning portfolios, optimize resume bullet points, analyze ATS scores, and generate tailored cover letters with NextHire AI." />
+    <meta name="twitter:image" content="/og-image.png" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Animated Premium Loading Screen Branding (Vanishes on React Mount) -->
+      <div id="branding-loader" style="
+        position: fixed;
+        inset: 0;
+        background-color: #09090B;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        font-family: system-ui, -apple-system, sans-serif;
+      ">
+        <div style="
+          position: relative;
+          width: 80px;
+          height: 80px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 24px;
+        ">
+          <!-- Pulse glow ring -->
+          <div style="
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #7C3AED, #A78BFA);
+            opacity: 0.15;
+            animation: pulse-ring 2s infinite ease-in-out;
+          "></div>
+          <!-- Inner card container -->
+          <div style="
+            position: relative;
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            background-color: #111113;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+          ">
+            <!-- Sparkles SVG logo mark -->
+            <svg width="32" height="32" viewBox="0 0 48 46" fill="none" xmlns="http://www.w3.org/2000/svg" style="animation: spin-sparkle 3s infinite linear;">
+              <path fill="#7C3AED" d="M25.946 44.938c-.664.845-2.021.375-2.021-.698V33.937a2.26 2.26 0 0 0-2.262-2.262H10.287c-.92 0-1.456-1.04-.92-1.788l7.48-10.471c1.07-1.497 0-3.578-1.842-3.578H1.237c-.92 0-1.456-1.04-.92-1.788L10.013.474c.214-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.471c-1.07 1.498 0 3.579 1.842 3.579h11.377c.943 0 1.473 1.088.89 1.83L25.947 44.94z"/>
+            </svg>
+          </div>
+        </div>
+
+        <h1 style="
+          color: #FFFFFF;
+          font-size: 24px;
+          font-weight: 700;
+          letter-spacing: -0.025em;
+          margin: 0 0 8px 0;
+        ">
+          NextHire<span style="color: #7C3AED;">.AI</span>
+        </h1>
+        <p style="
+          color: #71717A;
+          font-size: 10px;
+          margin: 0;
+          font-weight: 600;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+        ">
+          Preparing Career Workspace...
+        </p>
+
+        <!-- Inline Keyframes -->
+        <style>
+          @keyframes pulse-ring {
+            0%, 100% { transform: scale(1); opacity: 0.15; }
+            50% { transform: scale(1.12); opacity: 0.25; }
+          }
+          @keyframes spin-sparkle {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        </style>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
