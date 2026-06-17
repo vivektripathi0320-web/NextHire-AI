@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -52,7 +53,7 @@ export default function PortfolioBuilder() {
     const delayDebounce = setTimeout(async () => {
       setSlugStatus('checking');
       try {
-        const res = await fetch(`http://localhost:8000/api/portfolios/check-slug/${slug.trim()}`);
+        const res = await fetch(`${API_BASE_URL}/api/portfolios/check-slug/${slug.trim()}`);
         if (!res.ok) throw new Error();
         const data = await res.json();
         if (data.available) {
@@ -73,7 +74,7 @@ export default function PortfolioBuilder() {
   useEffect(() => {
     async function fetchResumes() {
       try {
-        const res = await fetch("http://localhost:8000/api/resumes");
+        const res = await fetch(`${API_BASE_URL}/api/resumes`);
         if (!res.ok) throw new Error("Failed to load resumes from the database.");
         const data = await res.json();
         setResumes(data);
@@ -148,7 +149,7 @@ export default function PortfolioBuilder() {
         }
       };
 
-      const res = await fetch("http://localhost:8000/api/portfolios", {
+      const res = await fetch(`${API_BASE_URL}/api/portfolios`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

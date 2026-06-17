@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config';
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -64,7 +65,7 @@ export default function PublicPortfolio() {
   useEffect(() => {
     async function fetchPortfolio() {
       try {
-        const res = await fetch(`http://localhost:8000/api/portfolios/${slug}`);
+        const res = await fetch(`${API_BASE_URL}/api/portfolios/${slug}`);
         if (res.status === 404) {
           throw new Error('Portfolio not found');
         }

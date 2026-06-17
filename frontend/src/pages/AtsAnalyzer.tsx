@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -71,7 +72,7 @@ export default function AtsAnalyzer() {
   const fetchResumes = async () => {
     setIsLoadingResumes(true);
     try {
-      const res = await fetch("http://localhost:8000/api/resumes");
+      const res = await fetch(`${API_BASE_URL}/api/resumes`);
       if (res.ok) {
         const data = await res.json();
         setResumes(data);
@@ -88,7 +89,7 @@ export default function AtsAnalyzer() {
 
   const fetchHistory = async (resumeId: number) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/ats-scan/history/${resumeId}`);
+      const res = await fetch(`${API_BASE_URL}/api/ats-scan/history/${resumeId}`);
       if (res.ok) {
         const data = await res.json();
         setScanHistory(data);
@@ -112,7 +113,7 @@ export default function AtsAnalyzer() {
     setAnalysisResult(null);
 
     try {
-      const res = await fetch("http://localhost:8000/api/ats-scan/analyze", {
+      const res = await fetch(`${API_BASE_URL}/api/ats-scan/analyze`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

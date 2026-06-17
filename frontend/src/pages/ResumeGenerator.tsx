@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -175,7 +176,7 @@ export default function ResumeGenerator() {
 
   const fetchSkillsRecommendations = async () => {
     try {
-      const res = await fetch("http://localhost:8000/api/ai-assistant/recommend-skills", {
+      const res = await fetch(`${API_BASE_URL}/api/ai-assistant/recommend-skills`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ target_role: targetRole })
@@ -191,7 +192,7 @@ export default function ResumeGenerator() {
 
   const fetchProjectsRecommendations = async () => {
     try {
-      const res = await fetch("http://localhost:8000/api/ai-assistant/recommend-projects", {
+      const res = await fetch(`${API_BASE_URL}/api/ai-assistant/recommend-projects`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ target_role: targetRole })
@@ -207,7 +208,7 @@ export default function ResumeGenerator() {
 
   const fetchCertificationsRecommendations = async () => {
     try {
-      const res = await fetch("http://localhost:8000/api/ai-assistant/recommend-certifications", {
+      const res = await fetch(`${API_BASE_URL}/api/ai-assistant/recommend-certifications`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ target_role: targetRole })
@@ -226,7 +227,7 @@ export default function ResumeGenerator() {
     setIsLoadingSuggestions(true);
     setAiSuggestions([]);
     try {
-      const res = await fetch("http://localhost:8000/api/ai-assistant/suggest", {
+      const res = await fetch(`${API_BASE_URL}/api/ai-assistant/suggest`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -255,7 +256,7 @@ export default function ResumeGenerator() {
     updateBullet(expIdx, bulletIdx, "Optimizing achievement via STAR method...");
     
     try {
-      const res = await fetch("http://localhost:8000/api/enhancements/optimize", {
+      const res = await fetch(`${API_BASE_URL}/api/enhancements/optimize`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -324,7 +325,7 @@ export default function ResumeGenerator() {
         setUploadStatusStep("Extracting text from document...");
       }, 800);
 
-      const res = await fetch("http://localhost:8000/api/resumes/upload", {
+      const res = await fetch(`${API_BASE_URL}/api/resumes/upload`, {
         method: "POST",
         body: formData
       });
@@ -484,7 +485,7 @@ export default function ResumeGenerator() {
     setQuickActionStatus(`Running AI ${action}...`);
     try {
       if (action === 'summary') {
-        const res = await fetch("http://localhost:8000/api/ai-assistant/suggest", {
+        const res = await fetch(`${API_BASE_URL}/api/ai-assistant/suggest`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -500,7 +501,7 @@ export default function ResumeGenerator() {
           }
         }
       } else if (action === 'skills') {
-        const res = await fetch("http://localhost:8000/api/ai-assistant/recommend-skills", {
+        const res = await fetch(`${API_BASE_URL}/api/ai-assistant/recommend-skills`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ target_role: targetRole })
@@ -515,7 +516,7 @@ export default function ResumeGenerator() {
           }
         }
       } else if (action === 'projects') {
-        const res = await fetch("http://localhost:8000/api/ai-assistant/recommend-projects", {
+        const res = await fetch(`${API_BASE_URL}/api/ai-assistant/recommend-projects`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ target_role: targetRole })
@@ -530,7 +531,7 @@ export default function ResumeGenerator() {
           }
         }
       } else if (action === 'certifications') {
-        const res = await fetch("http://localhost:8000/api/ai-assistant/recommend-certifications", {
+        const res = await fetch(`${API_BASE_URL}/api/ai-assistant/recommend-certifications`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ target_role: targetRole })
@@ -551,7 +552,7 @@ export default function ResumeGenerator() {
           const bullets = [...updatedExp[i].bullets];
           for (let j = 0; j < bullets.length; j++) {
             if (bullets[j] && bullets[j].length > 5) {
-              const res = await fetch("http://localhost:8000/api/enhancements/optimize", {
+              const res = await fetch(`${API_BASE_URL}/api/enhancements/optimize`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ bullet_point: bullets[j], job_title: targetRole })
@@ -740,7 +741,7 @@ export default function ResumeGenerator() {
     setGenerateError('');
     setIsGenerating(true);
     try {
-      const res = await fetch("http://localhost:8000/api/resumes/generate", {
+      const res = await fetch(`${API_BASE_URL}/api/resumes/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -773,7 +774,7 @@ export default function ResumeGenerator() {
     setIsSaving(true);
     setSaveSuccess(false);
     try {
-      const res = await fetch("http://localhost:8000/api/resumes", {
+      const res = await fetch(`${API_BASE_URL}/api/resumes`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

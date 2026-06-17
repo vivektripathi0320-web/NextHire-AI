@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config';
 import { useState } from 'react';
 import { 
   Sparkles, 
@@ -106,7 +107,7 @@ export default function ResumeEnhancer() {
     setChangesMade('');
     
     try {
-      const res = await fetch("http://localhost:8000/api/enhancements/optimize", {
+      const res = await fetch(`${API_BASE_URL}/api/enhancements/optimize`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

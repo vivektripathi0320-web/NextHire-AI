@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config';
 import { useState, useEffect, useRef } from 'react';
 import { 
   Sparkles, 
@@ -95,7 +96,7 @@ export default function CoverLetterGenerator() {
 
   const fetchResumes = async () => {
     try {
-      const res = await fetch("http://localhost:8000/api/resumes");
+      const res = await fetch(`${API_BASE_URL}/api/resumes`);
       if (res.ok) {
         const data = await res.json();
         setResumes(data);
@@ -111,7 +112,7 @@ export default function CoverLetterGenerator() {
   const fetchSavedLetters = async () => {
     setIsLoadingSaved(true);
     try {
-      const res = await fetch("http://localhost:8000/api/cover-letters");
+      const res = await fetch(`${API_BASE_URL}/api/cover-letters`);
       if (res.ok) {
         const data = await res.json();
         setSavedLetters(data);
@@ -143,7 +144,7 @@ export default function CoverLetterGenerator() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = await fetch("http://localhost:8000/api/resumes/upload", {
+      const res = await fetch(`${API_BASE_URL}/api/resumes/upload`, {
         method: "POST",
         body: formData
       });
@@ -182,7 +183,7 @@ export default function CoverLetterGenerator() {
         throw new Error("Please select a saved resume or upload a resume file.");
       }
 
-      const res = await fetch("http://localhost:8000/api/cover-letters/generate", {
+      const res = await fetch(`${API_BASE_URL}/api/cover-letters/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -212,7 +213,7 @@ export default function CoverLetterGenerator() {
     setIsGenerating(true);
 
     try {
-      const res = await fetch("http://localhost:8000/api/cover-letters/optimize", {
+      const res = await fetch(`${API_BASE_URL}/api/cover-letters/optimize`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -259,7 +260,7 @@ export default function CoverLetterGenerator() {
         keywords_detected: coverLetter.keywords_detected
       };
 
-      const res = await fetch("http://localhost:8000/api/cover-letters", {
+      const res = await fetch(`${API_BASE_URL}/api/cover-letters`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -282,7 +283,7 @@ export default function CoverLetterGenerator() {
     if (!confirm("Are you sure you want to delete this saved cover letter?")) return;
 
     try {
-      const res = await fetch(`http://localhost:8000/api/cover-letters/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/cover-letters/${id}`, {
         method: "DELETE"
       });
 
@@ -314,7 +315,7 @@ export default function CoverLetterGenerator() {
     setIsImproving(true);
     try {
       const textToImprove = coverLetter.content[improvingSection];
-      const res = await fetch("http://localhost:8000/api/cover-letters/improve", {
+      const res = await fetch(`${API_BASE_URL}/api/cover-letters/improve`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

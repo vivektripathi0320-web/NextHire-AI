@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -41,7 +42,7 @@ export default function JdMatcher() {
   useEffect(() => {
     async function fetchResumes() {
       try {
-        const res = await fetch("http://localhost:8000/api/resumes");
+        const res = await fetch(`${API_BASE_URL}/api/resumes`);
         if (!res.ok) throw new Error("Could not load saved resumes.");
         const data = await res.json();
         setResumes(data);
@@ -142,7 +143,7 @@ export default function JdMatcher() {
         job_description: jobDescription.trim()
       };
 
-      const res = await fetch("http://localhost:8000/api/match-jd/compare", {
+      const res = await fetch(`${API_BASE_URL}/api/match-jd/compare`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
