@@ -594,7 +594,7 @@ async def upload_resume_file(file: UploadFile = File(...)):
     if not extracted_text or len(extracted_text.strip()) < 10:
         raise HTTPException(
             status_code=400,
-            detail=f"Unable to extract text from this document. {ocr_log if ocr_triggered else ''}"
+            detail=f"Unable to extract text from this document. Details: {ocr_log}"
         )
 
     # 3. AI Parsing Stage
