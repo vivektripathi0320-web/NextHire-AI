@@ -512,14 +512,27 @@ async def upload_resume_file(file: UploadFile = File(...)):
     # 2. Text Extraction Stage
     try:
         if ext == "pdf":
-            import fitz
-            # Use PyMuPDF
-            doc = fitz.open(stream=content, filetype="pdf")
-            text_lines = []
-            for page in doc:
-                text_lines.append(page.get_text())
-            extracted_text = "\n".join(text_lines).strip()
-            text_extraction_engine = "pymupdf"
+            try:
+                import fitz
+                # Use PyMuPDF
+                doc = fitz.open(stream=content, filetype="pdf")
+                text_lines = []
+                for page in doc:
+                    text_lines.append(page.get_text())
+                extracted_text = "\n".join(text_lines).strip()
+                text_extraction_engine = "pymupdf"
+            except (ImportError, Exception):
+                # Fallback to pypdf (which is installed in requirements.txt)
+                from pypdf import PdfReader
+                import io
+                reader = PdfReader(io.BytesIO(content))
+                text_lines = []
+                for page in reader.pages:
+                    page_text = page.extract_text()
+                    if page_text:
+                        text_lines.append(page_text)
+                extracted_text = "\n".join(text_lines).strip()
+                text_extraction_engine = "pypdf"
             
             # Check for OCR fallback if text is scanned/empty
             if len(extracted_text) < 100:
@@ -545,20 +558,27 @@ async def upload_resume_file(file: UploadFile = File(...)):
                 except Exception as ocr_err:
                     ocr_log = f"Scanned document detected, but OCR failed or system binaries (Tesseract/Poppler) missing: {str(ocr_err)}"
         elif ext in ["docx", "doc"]:
-            import docx
-            import io
-            doc_file = docx.Document(io.BytesIO(content))
-            text_lines = []
-            for para in doc_file.paragraphs:
-                if para.text:
-                    text_lines.append(para.text)
-            for table in doc_file.tables:
-                for row in table.rows:
-                    row_text = [cell.text.strip() for cell in row.cells if cell.text.strip()]
-                    if row_text:
-                        text_lines.append(" | ".join(row_text))
-            extracted_text = "\n".join(text_lines).strip()
-            text_extraction_engine = "python-docx"
+            try:
+                import docx
+                import io
+                doc_file = docx.Document(io.BytesIO(content))
+                text_lines = []
+                for para in doc_file.paragraphs:
+                    if para.text:
+                        text_lines.append(para.text)
+                for table in doc_file.tables:
+                    for row in table.rows:
+                        row_text = [cell.text.strip() for cell in row.cells if cell.text.strip()]
+                        if row_text:
+                            text_lines.append(" | ".join(row_text))
+                extracted_text = "\n".join(text_lines).strip()
+                text_extraction_engine = "python-docx"
+            except (ImportError, Exception):
+                # Fallback to docx2txt (installed in requirements.txt)
+                import docx2txt
+                import io
+                extracted_text = docx2txt.process(io.BytesIO(content)).strip()
+                text_extraction_engine = "docx2txt"
         else:
             # Fallback to plain text decode
             try:
