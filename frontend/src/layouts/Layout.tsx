@@ -9,6 +9,7 @@ export default function Layout() {
     { name: 'Resume Builder', path: '/resume-generator' },
     { name: 'Enhancer', path: '/resume-enhancer' },
     { name: 'ATS Scan', path: '/ats-analyzer' },
+    { name: 'Cover Letter', path: '/cover-letter' },
     { name: 'Portfolio', path: '/portfolio-builder' },
     { name: 'JD Match', path: '/jd-matcher' },
   ];

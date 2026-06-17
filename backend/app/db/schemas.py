@@ -110,3 +110,59 @@ class ProjectsRecommendResponse(BaseModel):
 class CertificationsRecommendResponse(BaseModel):
     certifications: List[Dict[str, Any]]
 
+
+# --- COVER LETTER SCHEMAS ---
+class CoverLetterSection(BaseModel):
+    title: str
+    greeting: str
+    introduction: str
+    body: str
+    closing: str
+    signature: str
+
+class CoverLetterGenerateRequest(BaseModel):
+    resume_id: Optional[int] = None
+    resume_data: Optional[Dict[str, Any]] = None
+    job_description: Optional[str] = None
+    letter_type: str
+    style: str
+
+class CoverLetterCreate(BaseModel):
+    resume_id: Optional[int] = None
+    title: str
+    letter_type: str
+    style: str
+    content: CoverLetterSection
+    score: int
+    personalization_score: int
+    ats_score: int
+    tone_score: int
+    structure_score: int
+    keywords_detected: Optional[List[str]] = None
+
+class CoverLetterResponse(BaseModel):
+    id: int
+    resume_id: Optional[int] = None
+    title: str
+    letter_type: str
+    style: str
+    content: CoverLetterSection
+    score: int
+    personalization_score: int
+    ats_score: int
+    tone_score: int
+    structure_score: int
+    keywords_detected: Optional[List[str]] = None
+    created_at: datetime
+
+    class Config:
+        orm_mode = True
+
+class CoverLetterOptimizeRequest(BaseModel):
+    current_content: CoverLetterSection
+    job_description: str
+
+class CoverLetterImproveRequest(BaseModel):
+    text: str
+    instruction: str
+

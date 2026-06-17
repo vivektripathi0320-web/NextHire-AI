@@ -1,5 +1,6 @@
 import unittest
 import io
+import uuid
 from fastapi.testclient import TestClient
 from app.main import app
 
@@ -127,7 +128,7 @@ class TestEndpoints(unittest.TestCase):
         resume_id = res.json()["id"]
 
         # 2. Check slug availability (should be True initially)
-        unique_slug = "test-unique-slug-foo"
+        unique_slug = f"test-unique-slug-{uuid.uuid4().hex[:8]}"
         check_res = self.client.get(f"/api/portfolios/check-slug/{unique_slug}")
         self.assertEqual(check_res.status_code, 200)
         self.assertEqual(check_res.json()["available"], True)
@@ -154,6 +155,89 @@ class TestEndpoints(unittest.TestCase):
         create_res2 = self.client.post("/api/portfolios", json=portfolio_payload)
         self.assertEqual(create_res2.status_code, 201)
         self.assertEqual(create_res2.json()["slug"], f"{unique_slug}-1")
+
+    def test_cover_letters_generate_and_crud(self):
+        # 1. Create a dummy resume first
+        resume_payload = {
+            "title": "Software Engineer Resume",
+            "summary": "Experienced coder",
+            "raw_text": "Alex Mercer, React",
+            "json_content": {"contact": {"name": "Alex Mercer"}, "title": "Software Engineer"}
+        }
+        res = self.client.post("/api/resumes", json=resume_payload)
+        self.assertEqual(res.status_code, 201)
+        resume_id = res.json()["id"]
+
+        # 2. Test generation
+        gen_payload = {
+            "resume_id": resume_id,
+            "job_description": "We need a Software Engineer with React experience.",
+            "letter_type": "Professional",
+            "style": "Confident"
+        }
+        response = self.client.post("/api/cover-letters/generate", json=gen_payload)
+        self.assertEqual(response.status_code, 200)
+        gen_data = response.json()
+        self.assertIn("content", gen_data)
+        self.assertIn("score", gen_data)
+        self.assertEqual(gen_data["letter_type"], "Professional")
+        self.assertEqual(gen_data["style"], "Confident")
+
+        # 3. Test optimize
+        opt_payload = {
+            "current_content": gen_data["content"],
+            "job_description": "We are seeking a React developer proficient in system design."
+        }
+        response = self.client.post("/api/cover-letters/optimize", json=opt_payload)
+        self.assertEqual(response.status_code, 200)
+        opt_data = response.json()
+        self.assertIn("greeting", opt_data)
+        self.assertIn("introduction", opt_data)
+
+        # 4. Test improve
+        imp_payload = {
+            "text": gen_data["content"]["body"],
+            "instruction": "make it sound more metrics-driven"
+        }
+        response = self.client.post("/api/cover-letters/improve", json=imp_payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("improved_text", response.json())
+
+        # 5. Test save
+        save_payload = {
+            "resume_id": resume_id,
+            "title": "My Software Engineer Cover Letter",
+            "letter_type": "Professional",
+            "style": "Confident",
+            "content": gen_data["content"],
+            "score": gen_data["score"],
+            "personalization_score": gen_data["personalization_score"],
+            "ats_score": gen_data["ats_score"],
+            "tone_score": gen_data["tone_score"],
+            "structure_score": gen_data["structure_score"],
+            "keywords_detected": gen_data["keywords_detected"]
+        }
+        response = self.client.post("/api/cover-letters", json=save_payload)
+        self.assertEqual(response.status_code, 201)
+        saved_letter = response.json()
+        self.assertIn("id", saved_letter)
+        self.assertEqual(saved_letter["title"], "My Software Engineer Cover Letter")
+
+        # 6. Test list
+        response = self.client.get("/api/cover-letters")
+        self.assertEqual(response.status_code, 200)
+        letters_list = response.json()
+        self.assertTrue(len(letters_list) >= 1)
+        self.assertTrue(any(l["id"] == saved_letter["id"] for l in letters_list))
+
+        # 7. Test delete
+        response = self.client.delete(f"/api/cover-letters/{saved_letter['id']}")
+        self.assertEqual(response.status_code, 204)
+
+        # Verify deletion
+        response = self.client.get("/api/cover-letters")
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(any(l["id"] == saved_letter["id"] for l in response.json()))
 
 if __name__ == "__main__":
     unittest.main()

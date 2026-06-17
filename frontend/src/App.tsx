@@ -7,6 +7,7 @@ import AtsAnalyzer from './pages/AtsAnalyzer';
 import PortfolioBuilder from './pages/PortfolioBuilder';
 import PublicPortfolio from './pages/PublicPortfolio';
 import JdMatcher from './pages/JdMatcher';
+import CoverLetterGenerator from './pages/CoverLetterGenerator';
 import About from './pages/About';
 import Contact from './pages/Contact';
 
@@ -20,6 +21,7 @@ export default function App() {
           <Route path="resume-enhancer" element={<ResumeEnhancer />} />
           <Route path="ats-analyzer" element={<AtsAnalyzer />} />
           <Route path="portfolio-builder" element={<PortfolioBuilder />} />
+          <Route path="cover-letter" element={<CoverLetterGenerator />} />
           <Route path="jd-matcher" element={<JdMatcher />} />
           <Route path="about" element={<About />} />
           <Route path="contact" element={<Contact />} />

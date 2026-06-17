@@ -17,6 +17,7 @@ class Resume(Base):
     # Relationships
     scans = relationship("AtsScan", back_populates="resume", cascade="all, delete-orphan")
     portfolios = relationship("Portfolio", back_populates="resume", cascade="all, delete-orphan")
+    cover_letters = relationship("CoverLetter", back_populates="resume", cascade="all, delete-orphan")
 
 
 class AtsScan(Base):
@@ -49,3 +50,25 @@ class Portfolio(Base):
 
     # Relationships
     resume = relationship("Resume", back_populates="portfolios")
+
+
+class CoverLetter(Base):
+    __tablename__ = "cover_letters"
+
+    id = Column(Integer, primary_key=True, index=True)
+    resume_id = Column(Integer, ForeignKey("resumes.id", ondelete="CASCADE"), nullable=True)
+    title = Column(String(255), nullable=False)
+    letter_type = Column(String(50), nullable=False)
+    style = Column(String(50), nullable=False)
+    # Structured sections: greeting, introduction, body, closing, signature
+    content = Column(JSON, nullable=False)
+    score = Column(Integer, default=85)
+    personalization_score = Column(Integer, default=85)
+    ats_score = Column(Integer, default=85)
+    tone_score = Column(Integer, default=85)
+    structure_score = Column(Integer, default=85)
+    keywords_detected = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    # Relationships
+    resume = relationship("Resume", back_populates="cover_letters")
