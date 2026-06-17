@@ -144,7 +144,9 @@ export default function Layout() {
                 <li><Link to="/resume-generator" className="hover:text-primary transition-colors">AI Resume Generator</Link></li>
                 <li><Link to="/resume-enhancer" className="hover:text-primary transition-colors">AI Resume Enhancer</Link></li>
                 <li><Link to="/ats-analyzer" className="hover:text-primary transition-colors">ATS Score Analyzer</Link></li>
+                <li><Link to="/cover-letter" className="hover:text-primary transition-colors">AI Cover Letter Generator</Link></li>
                 <li><Link to="/portfolio-builder" className="hover:text-primary transition-colors">Portfolio Generator</Link></li>
+                <li><Link to="/jd-matcher" className="hover:text-primary transition-colors">JD Matcher</Link></li>
               </ul>
             </div>
             <div>
