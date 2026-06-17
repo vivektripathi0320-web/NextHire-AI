@@ -9,7 +9,8 @@ import {
   ChevronRight, 
   Gauge, 
   Shuffle, 
-  Check
+  Check,
+  Mail
 } from 'lucide-react';
 
 // Animation variants
@@ -84,6 +85,14 @@ export default function LandingPage() {
       link: "/jd-matcher",
       color: "from-rose-500/20 to-pink-500/20",
       borderHover: "hover:border-rose-500/30"
+    },
+    {
+      title: "AI Cover Letter Generator",
+      description: "Generate highly customized, professional cover letters matching your resume details and target job description.",
+      icon: Mail,
+      link: "/cover-letter",
+      color: "from-violet-500/20 to-fuchsia-500/20",
+      borderHover: "hover:border-violet-500/30"
     }
   ];
 
@@ -196,7 +205,7 @@ export default function LandingPage() {
             Supercharge Your Job Search
           </h2>
           <p className="text-zinc-400 mt-4 max-w-2xl mx-auto">
-            Five powerful AI tools housed in one interface, built to make you stand out and bypass recruiter filters.
+            Six powerful AI tools housed in one interface, built to make you stand out and bypass recruiter filters.
           </p>
         </div>
 
