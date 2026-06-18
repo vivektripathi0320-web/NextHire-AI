@@ -427,7 +427,7 @@ export default function PortfolioBuilder() {
                 
                 <div className="flex rounded-xl overflow-hidden border border-white/10 bg-zinc-900/60 focus-within:border-primary transition-colors">
                   <span className="bg-zinc-800 text-zinc-500 px-3 py-3 text-xs sm:text-sm flex items-center border-r border-white/5">
-                    nexthire.ai/portfolio/
+                    nexthire.ai/#/portfolio/
                   </span>
                   <input
                     type="text"
@@ -586,7 +586,7 @@ export default function PortfolioBuilder() {
 
                 <div className="flex gap-3">
                   <a
-                    href={`/portfolio/${createdSlug}`}
+                    href={`/#/portfolio/${createdSlug}`}
                     target="_blank"
                     rel="noreferrer"
                     className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-zinc-800 border border-zinc-700 py-3 text-xs font-semibold text-white hover:bg-zinc-700 transition-all"

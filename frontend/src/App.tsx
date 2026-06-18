@@ -10,6 +10,7 @@ import JdMatcher from './pages/JdMatcher';
 import CoverLetterGenerator from './pages/CoverLetterGenerator';
 import About from './pages/About';
 import Contact from './pages/Contact';
+import Presentation from './pages/Presentation';
 
 export default function App() {
   return (
@@ -27,7 +28,9 @@ export default function App() {
           <Route path="contact" element={<Contact />} />
         </Route>
         <Route path="portfolio/:slug" element={<PublicPortfolio />} />
+        <Route path="presentation" element={<Presentation />} />
       </Routes>
     </Router>
   );
 }
+
