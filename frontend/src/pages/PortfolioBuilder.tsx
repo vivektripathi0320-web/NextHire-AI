@@ -173,7 +173,7 @@ export default function PortfolioBuilder() {
 
   const copyToClipboard = () => {
     if (!createdSlug) return;
-    const url = `${window.location.origin}/#/portfolio/${createdSlug}`;
+    const url = `${window.location.origin}/portfolio/${createdSlug}`;
     navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -427,7 +427,7 @@ export default function PortfolioBuilder() {
                 
                 <div className="flex rounded-xl overflow-hidden border border-white/10 bg-zinc-900/60 focus-within:border-primary transition-colors">
                   <span className="bg-zinc-800 text-zinc-500 px-3 py-3 text-xs sm:text-sm flex items-center border-r border-white/5">
-                    nexthire.ai/#/portfolio/
+                    nexthire.ai/portfolio/
                   </span>
                   <input
                     type="text"
@@ -572,7 +572,7 @@ export default function PortfolioBuilder() {
                 {/* Slug display */}
                 <div className="border border-white/5 bg-zinc-950/60 rounded-xl p-3 flex items-center justify-between gap-3 overflow-hidden">
                   <span className="text-xs text-zinc-300 font-mono truncate select-all pr-2">
-                    {window.location.origin}/#/portfolio/{createdSlug}
+                    {window.location.origin}/portfolio/{createdSlug}
                   </span>
                   <button
                     type="button"
@@ -586,7 +586,7 @@ export default function PortfolioBuilder() {
 
                 <div className="flex gap-3">
                   <a
-                    href={`/#/portfolio/${createdSlug}`}
+                    href={`/portfolio/${createdSlug}`}
                     target="_blank"
                     rel="noreferrer"
                     className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-zinc-800 border border-zinc-700 py-3 text-xs font-semibold text-white hover:bg-zinc-700 transition-all"
