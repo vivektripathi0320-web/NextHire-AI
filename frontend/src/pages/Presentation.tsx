@@ -60,24 +60,24 @@ export default function Presentation() {
       desc: 'NextHire AI landing page displaying feature modules, core metrics, and active theme switches.'
     },
     {
-      title: '2. ATS Analyzer',
-      src: './assets/ats_screenshot.png',
-      desc: 'ATS Score Analyzer panel showing score indicator, keyword alignment checks, and suggestion notes.'
+      title: '2. AI Resume Builder',
+      src: './assets/resume_editor_screenshot.png',
+      desc: 'AI-powered Resume Builder workspace with real-time completeness scoring and template selection.'
     },
     {
-      title: '3. Portfolio Builder',
-      src: './assets/portfolio_screenshot.png',
-      desc: 'Portfolio Builder dashboard demonstrating theme customization controls and a responsive web rendering preview.'
+      title: '3. AI Resume Enhancer',
+      src: './assets/resume_enhancer_screenshot.png',
+      desc: 'AI Resume Enhancer showing weak bullet point transformation using the STAR method and ATS optimization.'
     },
     {
-      title: '4. Cover Letter Writer',
-      src: './assets/cover_letter_screenshot.png',
-      desc: 'Cover Letter Generator showing input field parameters and structured professional outputs.'
+      title: '4. JD Matcher',
+      src: './assets/jd_matcher_screenshot.png',
+      desc: 'Job Description Matcher comparing profile skills against job descriptions to compute compatibility.'
     },
     {
-      title: '5. Login Screen',
-      src: './assets/login_screenshot.png',
-      desc: 'NextHire AI Login interface, featuring a clean glassmorphic design and a secure authentication card.'
+      title: '5. Public Portfolio',
+      src: './assets/portfolio_live_screenshot.png',
+      desc: 'A live, responsive compiled personal portfolio hosted directly on a clean public URL path.'
     }
   ];
 
