@@ -56,12 +56,6 @@ export default function Layout() {
             {/* Desktop CTA */}
             <div className="hidden md:flex items-center gap-4">
               <Link
-                to="/presentation"
-                className="text-sm font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-1 border border-primary/20 rounded px-2 py-1 bg-primary/5 hover:bg-primary/10"
-              >
-                <Sparkles className="h-3.5 w-3.5" /> Demo Slides
-              </Link>
-              <Link
                 to="/about"
                 className="text-sm font-medium text-zinc-400 hover:text-white transition-colors"
               >
@@ -106,13 +100,6 @@ export default function Layout() {
               </NavLink>
             ))}
             <div className="border-t border-white/5 pt-4 flex flex-col gap-3">
-              <Link
-                to="/presentation"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2 text-base font-medium py-2 px-3 text-primary hover:text-primary/80 transition-colors"
-              >
-                <Sparkles className="h-4 w-4" /> Demo Slides
-              </Link>
               <Link
                 to="/about"
                 onClick={() => setMobileMenuOpen(false)}
@@ -165,7 +152,6 @@ export default function Layout() {
             <div>
               <h3 className="font-heading text-sm font-semibold text-zinc-300 mb-4">Company</h3>
               <ul className="space-y-2 text-sm text-zinc-400">
-                <li><Link to="/presentation" className="hover:text-primary transition-colors flex items-center gap-1"><Sparkles className="h-3 h-3 text-primary" /> Project Slides</Link></li>
                 <li><Link to="/about" className="hover:text-primary transition-colors">About Us</Link></li>
                 <li><Link to="/contact" className="hover:text-primary transition-colors">Contact</Link></li>
               </ul>

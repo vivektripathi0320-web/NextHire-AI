@@ -142,3 +142,16 @@ This document contains the slide-by-slide structure, text, and visual assets for
     *   Email: `vivek.tripathi@nexthire.ai`
     *   GitHub: `github.com/vivektripathi0320-web`
     *   Portfolio: `nexthire-ai.vercel.app/p/vivek-tripathi`
+
+---
+
+## Slide 13: References
+*   **Title**: References & Bibliography
+*   **Citations**:
+    *   **[1] FastAPI Framework**: S. Ramírez, *FastAPI: A modern, high-performance web API framework for Python*, 2018.
+    *   **[2] React Library**: Meta Open Source, *React: A JavaScript library for building user interfaces*, 2013.
+    *   **[3] Google Gemini API**: Google DeepMind, *Gemini: A family of highly capable multimodal models*, 2023.
+    *   **[4] SQLite Engine**: D. R. Hipp, *SQLite Database Engine*, 2000.
+    *   **[5] SQLAlchemy ORM**: M. Bayer, *SQLAlchemy: Python SQL Toolkit and Object Relational Mapper*, 2005.
+    *   **[6] Tailwind CSS**: A. Wathan, *Tailwind CSS: A utility-first CSS framework*, 2017.
+
